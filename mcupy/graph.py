@@ -101,7 +101,7 @@ class Node(metaclass=ABCMeta):
 	def __mul__(self,that):
 		return MulNode(self,that)
 
-	def __div__(self,that):
+	def __truediv__(self,that):
 		return DivNode(self,that)
 
 	def __lt__(self,that):
@@ -118,9 +118,13 @@ class Node(metaclass=ABCMeta):
 
 class StochasticNode(Node,metaclass=ABCMeta):
 	def __init__(self,value,*parents):
-		Node.__init__(self,len(value),*parents)
-		self.value=value
-		self.observed=[False for i in value]
+		if hasattr(value,"__len__"):
+			Node.__init__(self,len(value),*parents)
+			self.value=value
+		else:
+			Node.__init__(self,1,*parents)
+			self.value=[value]
+		self.observed=[False for i in self.value]
 
 	def getValue(self,i):
 		if self.graph==None:
@@ -195,7 +199,7 @@ class NodeOutput:
 	def __mul__(self,that):
 		return MulNode(self,that)
 
-	def __div__(self,that):
+	def __truediv__(self,that):
 		return DivNode(self,that)
 
 	def __lt__(self,that):

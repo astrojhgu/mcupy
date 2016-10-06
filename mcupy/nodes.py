@@ -48,14 +48,14 @@ class BetaNode(DeterministicNode):
 
 class BinNode(StochasticNode):
 	def __init__(self,p,n):
-		StochasticNode.__init__(self,[NodeOutput(p).value()*NodeOutput(n).value()],p,n)
+		StochasticNode.__init__(self,[NodeOutput(p).getValue()*NodeOutput(n).getValue()],p,n)
 
 	def getNodePtr(self):
 		return core.bin_node()
 
 class BvnormalNode(StochasticNode):
 	def __init__(self,mu1,mu2,sigma1,sigma2,rho):
-		StochasticNode.__init__(self,[NodeOutput(mu1).value(),NodeOutput(mu2).value()],mu1,mu2,sigma1,sigma2,rho)
+		StochasticNode.__init__(self,[NodeOutput(mu1).getValue(),NodeOutput(mu2).getValue()],mu1,mu2,sigma1,sigma2,rho)
 
 	def getNodePtr(self):
 		return core.bvnormal_node()
@@ -130,7 +130,7 @@ class SqrtNode(DeterministicNode):
 	
 class GammaNode(StochasticNode):
 	def __init__(self,r,lbd):
-		StochasticNode.__init__(self,[NodeOutput(r).value()/NodeOutput(lbd).value()],r,lbd)
+		StochasticNode.__init__(self,[NodeOutput(r).getValue()/NodeOutput(lbd).getValue()],r,lbd)
 
 	def getNodePtr(self):
 		return core.gamma_node()
@@ -146,7 +146,7 @@ class ILogitNode(DeterministicNode):
 		import math
 		def ilogit(x):
 			return 1.0/(1+math.exp(-x))
-		return ilogit(parents[0].value())
+		return ilogit(parents[0].getValue())
 
 class LogitNode(DeterministicNode):
 	def __init__(self,x):
@@ -160,19 +160,19 @@ class LogitNode(DeterministicNode):
 		def logit(x):
 			return math.log(x/(1-x))
 
-		return logit(parents[0].value())
+		return logit(parents[0].getValue())
 
 			
 class ParetoNode(StochasticNode):
 	def __init__(self,c,a):
-		StochasticNode.__init__(self,[NodeOutput(c).value()],c,a)
+		StochasticNode.__init__(self,[NodeOutput(c).getValue()],c,a)
 
 	def getNodePtr(self):
 		return core.pareto_node()
 
 class PhiNode(DeterministicNode):
 	def __init__(self,x):
-		StochasticNode.__init__(self,1,x)
+		StochasticNode.__init__(self,[1],x)
 
 	def getNodePtr(self):
 		return core.phi_node()
@@ -194,22 +194,22 @@ class PhiNode(DeterministicNode):
 		def phi(x):
 		  SQRT2=2**0.5
 		  return (1+erf(x/SQRT2))/2
-		return phi(self.parents[0].value())
+		return phi(self.parents[0].getValue())
 
 	
 class PoissonNode(StochasticNode):
 	def __init__(self,lbd):
-		StochasticNode.__init__(self,[NodeOutput(lbd).value()],lbd)
+		StochasticNode.__init__(self,[NodeOutput(lbd).getValue()],lbd)
 
 	def getNodePtr(self):
 		return core.poisson_node()
 
-def StepNode(DeterministicNode):
+class StepNode(DeterministicNode):
 	def __init__(self,x):
 		DeterministicNode.__init__(self,1,x)
 
 	def getValue(self,i):
-		if self.parents[0].value()>=0:
+		if self.parents[0].getValue()>=0:
 			return 1.0
 		else:
 			return 0.0
@@ -217,14 +217,14 @@ def StepNode(DeterministicNode):
 	def getNodePtr(self):
 		return core.step_node()
 
-def UniformNode(StochasticNode):
+class UniformNode(StochasticNode):
 	def __init__(self,a,b):
 		StochasticNode.__init__(self,[(a+b)/2])
 		self.a=a
 		self.b=b
 
 	def getNodePtr(self):
-		return core.uniform_node(a,b)
+		return core.uniform_node(self.a,self.b)
 
 class TNode(StochasticNode):
 	def __init__(self,m,s,k):
@@ -240,12 +240,25 @@ class DiscreteUniformNode(StochasticNode):
 		self.b=b
 
 	def getNodePtr(self):
-		return core.discrete_uniform_node(a,b)
+		return core.discrete_uniform_node(self.a,self.b)
 	
 class SwitchNode(DeterministicNode):
 	def __init__(self,s,*p):
-		StochasticNode.__init__(self,1,*(p+(s,)))
+		DeterministicNode.__init__(self,1,*(p+(s,)))
 
 	def getNodeKey(self):
 		return core.switch_node(len(parents)-1)
 		
+class CondNode(DeterministicNode):
+	def __init__(self,s,p1,p2):
+		DeterministicNode.__init__(self,1,s,p1,p2)
+
+	def getNodePtr(self):
+		return core.cond_node()
+
+	def getValue(self,i):
+		if self.parents[0]==0:
+			return self.parents[2].getValue()
+		else:
+			return self.parents[1].getValue()
+			

@@ -29,6 +29,7 @@
 #include<nodes/bin_node.hpp>
 #include<nodes/bvnormal_node.hpp>
 #include<nodes/const_node.hpp>
+#include<nodes/cond_node.hpp>
 #include<nodes/cos_node.hpp>
 #include<nodes/gamma_node.hpp>
 #include<nodes/ilogit_node.hpp>
@@ -383,6 +384,8 @@ BOOST_PYTHON_MODULE(core)
   def("eq_node",&create_node<eq_node<double,std_vector> >,return_value_policy<return_by_value>());
   
   def("switch_node",&create_node<switch_node<double,std_vector>,int >,return_value_policy<return_by_value>());
+
+  def("cond_node",&create_node<cond_node<double,std_vector> >,return_value_policy<return_by_value>());
   
   def("is_deterministic_node",&test_node_kind<deterministic_node<double,std_vector> >);
   def("is_stochastic_node",&test_node_kind<stochastic_node<double,std_vector> >);
