@@ -15,8 +15,8 @@ for l in open('eff.txt'):
 	e1=float(e1)
 	nrec1=float(nrec1)
 	ninj1=float(ninj1)
-	E=ConstNode(e1)
-	ninj=ConstNode(ninj1)
+	E=C_(e1)
+	ninj=C_(ninj1)
 	eff=(B-A)*PhiNode((E-mu)/sigma)+A
 	nrec=BinNode(eff,ninj).withObservedValue(nrec1)
 	g.addNode(nrec)

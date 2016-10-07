@@ -19,6 +19,8 @@ class ConstNode(DeterministicNode):
 	def getNodePtr(self):
 		return core.const_node(self.value)
 
+C_=ConstNode
+
 class NormalNode(StochasticNode):
 	def __init__(self,m,s):
 		StochasticNode.__init__(self,[NodeOutput(m).getValue()],m,s)

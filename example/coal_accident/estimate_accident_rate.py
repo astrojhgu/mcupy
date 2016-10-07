@@ -13,7 +13,7 @@ for line in open('coal.dat'):
 	year,accid=line.split()
 	year=int(year)
 	accid=int(accid)
-	y1=ConstNode(year)
+	y1=C_(year)
 	#l=switch((y>const(year,("y",cnt))),(l1,l2),("lambda",cnt))
 	
 	#l=func("cond(y1<y,l1,l2)",("y1","y","l1","l2"),(y1,y,l1,l2),("l",cnt))
