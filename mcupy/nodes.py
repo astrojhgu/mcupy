@@ -36,10 +36,10 @@ class AbsNode(DeterministicNode):
 		return core.abs_node()
 
 	def getValue(self,i):
-		return abs(parents[0].getValue())
+		return abs(self.parents[0].getValue())
 
 
-class BetaNode(DeterministicNode):
+class BetaNode(StochasticNode):
 	def __init__(self,a,b):
 		StochasticNode.__init__(self,[0.5])
 		self.a=a
@@ -72,7 +72,7 @@ class CosNode(DeterministicNode):
 
 	def getValue(self,i):
 		import math
-		return math.cos(parents[0].getValue())
+		return math.cos(self.parents[0].getValue())
 
 class SinNode(DeterministicNode):
 	def __init__(self,p):
@@ -83,7 +83,7 @@ class SinNode(DeterministicNode):
 
 	def getValue(self,i):
 		import math
-		return math.sin(parents[0].getValue())
+		return math.sin(self.parents[0].getValue())
 
 class TanNode(DeterministicNode):
 	def __init__(self,p):
@@ -94,7 +94,7 @@ class TanNode(DeterministicNode):
 
 	def getValue(self,i):
 		import math
-		return math.tan(parents[0].getValue())
+		return math.tan(self.parents[0].getValue())
 
 class LogNode(DeterministicNode):
 	def __init__(self,p):
@@ -105,7 +105,7 @@ class LogNode(DeterministicNode):
 
 	def getValue(self,i):
 		import math
-		return math.log(parents[0].getValue())
+		return math.log(self.parents[0].getValue())
 
 class Log10Node(DeterministicNode):
 	def __init__(self,p):
@@ -116,7 +116,7 @@ class Log10Node(DeterministicNode):
 
 	def getValue(self,i):
 		import math
-		return math.log10(parents[0].getValue())
+		return math.log10(self.parents[0].getValue())
 
 class SqrtNode(DeterministicNode):
 	def __init__(self,p):
@@ -127,7 +127,7 @@ class SqrtNode(DeterministicNode):
 
 	def getValue(self,i):
 		import math
-		return math.sqrt(parents[0].getValue())
+		return math.sqrt(self.parents[0].getValue())
 
 	
 class GammaNode(StochasticNode):
@@ -148,7 +148,7 @@ class ILogitNode(DeterministicNode):
 		import math
 		def ilogit(x):
 			return 1.0/(1+math.exp(-x))
-		return ilogit(parents[0].getValue())
+		return ilogit(self.parents[0].getValue())
 
 class LogitNode(DeterministicNode):
 	def __init__(self,x):
@@ -162,7 +162,7 @@ class LogitNode(DeterministicNode):
 		def logit(x):
 			return math.log(x/(1-x))
 
-		return logit(parents[0].getValue())
+		return logit(self.parents[0].getValue())
 
 			
 class ParetoNode(StochasticNode):
@@ -249,7 +249,7 @@ class SwitchNode(DeterministicNode):
 		DeterministicNode.__init__(self,1,*(p+(s,)))
 
 	def getNodeKey(self):
-		return core.switch_node(len(parents)-1)
+		return core.switch_node(len(self.parents)-1)
 		
 class CondNode(DeterministicNode):
 	def __init__(self,s,p1,p2):
@@ -264,3 +264,4 @@ class CondNode(DeterministicNode):
 		else:
 			return self.parents[1].getValue()
 			
+		
