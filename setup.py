@@ -17,8 +17,12 @@ module1=Extension('mcupy.core',
                       extra_compile_args=['-std=c++14'],
                       sources=['mcmc.cpp'],
                       language='c++')
+#module1.extra_compile_args+=['-DUSE_OMP_TRANSFORM','-fopenmp']
+#module1.extra_link_args=['-fopenmp']
+
+
 
 setup(name='core',
-          packages=['mcupy'],
+		  packages=['mcupy'],
           version='1.0',
           ext_modules=[module1])

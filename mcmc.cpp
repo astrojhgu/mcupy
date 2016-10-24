@@ -28,14 +28,23 @@
 #include<nodes/beta_node.hpp>
 #include<nodes/bin_node.hpp>
 #include<nodes/bvnormal_node.hpp>
+#include<nodes/cauchy_node.hpp>
+#include<nodes/chisqr_node.hpp>
 #include<nodes/const_node.hpp>
 #include<nodes/cond_node.hpp>
 #include<nodes/cos_node.hpp>
+#include<nodes/dexp_node.hpp>
+#include<nodes/exp_node.hpp>
+#include<nodes/exp_dist_node.hpp>
+#include<nodes/f_node.hpp>
 #include<nodes/gamma_node.hpp>
+#include<nodes/gen_gamma_node.hpp>
 #include<nodes/ilogit_node.hpp>
 #include<nodes/log10_node.hpp>
 #include<nodes/logit_node.hpp>
 #include<nodes/log_node.hpp>
+#include<nodes/logistic_node.hpp>
+#include<nodes/log_normal_node.hpp>
 #include<nodes/normal_node.hpp>
 #include<nodes/pareto_node.hpp>
 #include<nodes/phi_node.hpp>
@@ -235,6 +244,11 @@ double pyarms(PyObject* func,double x1,double x2,double xcur)
   return arms(pd,std::pair<double,double>(x1,x2),xcur,10,rnd,xmc);
 }
 
+double eval_expr(const std::string& expr,const std::vector<std::string>& args,const std::vector<double>& params)
+{
+  return str_node<double,std_vector>::eval_expr(expr,args,params);
+}
+
 
 BOOST_PYTHON_MODULE(core)
 {
@@ -243,11 +257,13 @@ BOOST_PYTHON_MODULE(core)
   class_<std::shared_ptr<node<double,std_vector> > >("node_ptr");
   class_<std::weak_ptr<node<double,std_vector> > >("weak_node_ptr");
   
-  class_<std::vector<double> >("vector")
-    .def(vector_indexing_suite<std::vector<double> >());
+  class_<std::vector<double> >("vector",boost::python::init<size_t>())
+    .def(vector_indexing_suite<std::vector<double> >())
+    .def("append",(void (std::vector<double>::*)(const double&))&std::vector<double>::push_back);
 
-  class_<std::vector<std::string> >("str_vec")
-    .def(vector_indexing_suite<std::vector<std::string> >());
+  class_<std::vector<std::string> >("str_vec",boost::python::init<size_t>())
+    .def(vector_indexing_suite<std::vector<std::string> >())
+    .def("append",(void (std::vector<std::string>::*)(const std::string&))&std::vector<std::string>::push_back);
 
   class_<std::vector<std::pair<mcmc_utilities::tag_t,size_t> > >("tag_vec")
 	 .def(vector_indexing_suite<std::vector<std::pair<mcmc_utilities::tag_t,size_t> > >());
@@ -346,18 +362,31 @@ BOOST_PYTHON_MODULE(core)
     .def("done",&node_adder<double,mcmc_utilities::tag_t>::done)
     .def("with_tag",&node_adder<double,mcmc_utilities::tag_t>::with_tag,return_value_policy<return_by_value>())
     ;
+
+
+  
+  def("eval_expr",&eval_expr);
   
   def("abs_node",&create_node<abs_node<double,std_vector> >,return_value_policy<return_by_value>());
   def("beta_node",&create_node<beta_node<double,std_vector>,double,double>,return_value_policy<return_by_value>());
   def("bin_node",&create_node<bin_node<double,std_vector> >,return_value_policy<return_by_value>());
   def("bvnormal_node",&create_node<bvnormal_node<double,std_vector> >,return_value_policy<return_by_value>());
+  def("cauchy_node",&create_node<cauchy_node<double,std_vector> >,return_value_policy<return_by_value>());
+  def("chisqr_node",&create_node<chisqr_node<double,std_vector>, int>,return_value_policy<return_by_value>());
   def("const_node",&create_node<const_node<double,std_vector>,double >,return_value_policy<return_by_value>());
   def("cos_node",&create_node<cos_node<double,std_vector> >,return_value_policy<return_by_value>());
+  def("dexp_node",&create_node<dexp_node<double,std_vector> >,return_value_policy<return_by_value>());
+  def("exp_node",&create_node<exp_node<double,std_vector> >,return_value_policy<return_by_value>());
+  def("exp_dist_node",&create_node<exp_dist_node<double,std_vector> >,return_value_policy<return_by_value>());
+  def("f_node",&create_node<f_node<double,std_vector> >,return_value_policy<return_by_value>());
   def("gamma_node",&create_node<gamma_node<double,std_vector> >,return_value_policy<return_by_value>());
+  def("gen_gamma_node",&create_node<gen_gamma_node<double,std_vector> >,return_value_policy<return_by_value>());
   def("ilogit_node",&create_node<ilogit_node<double,std_vector> >,return_value_policy<return_by_value>());
   def("log10_node",&create_node<log10_node<double,std_vector> >,return_value_policy<return_by_value>());
   def("logit_node",&create_node<logit_node<double,std_vector> >,return_value_policy<return_by_value>());
+  def("logistic_node",&create_node<logistic_node<double,std_vector> >,return_value_policy<return_by_value>());
   def("log_node",&create_node<log_node<double,std_vector> >,return_value_policy<return_by_value>());
+  def("log_normal_node",&create_node<log_normal_node<double,std_vector> >,return_value_policy<return_by_value>());
   def("normal_node",&create_node<normal_node<double,std_vector> >,return_value_policy<return_by_value>());
   def("pareto_node",&create_node<pareto_node<double,std_vector> >,return_value_policy<return_by_value>());
   def("phi_node",&create_node<phi_node<double,std_vector> >,return_value_policy<return_by_value>());

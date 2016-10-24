@@ -16,9 +16,22 @@ def Tag(*t):
 class Graph:
 	def __init__(self):
 		self.graph=core.cppgraph()
+		self.nodes=[]
 		pass
 
+	def __getstate__(self):
+		state=self.__dict__.copy()
+		del state['graph']
+		return state
+
+	def __setstate__(self,state):
+		self.__dict__.update(state)
+		self.graph=core.cppgraph()
+		for n in self.nodes:
+			n.addToGraph(self)
+
 	def addNode(self,node):
+		self.nodes.append(node)
 		node.addToGraph(self)
 
 	def sample(self):
@@ -49,6 +62,11 @@ class Node(metaclass=ABCMeta):
 		self.tagIndex=Node.nodeCount
 		self.nOutputs=int(nOutputs)
 		Node.nodeCount+=1
+
+	def __getstate__(self):
+		state=self.__dict__.copy()
+		state['graph']=None
+		return state
 
 	@abstractmethod
 	def getNodePtr(self):

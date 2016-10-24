@@ -21,6 +21,29 @@ class ConstNode(DeterministicNode):
 
 C_=ConstNode
 
+class CauchyNode(StochasticNode):
+	def __init__(self,x0,gamma):
+		StochasticNode.__init__(self,[NodeOutput(x0).getValue()],x0,gamma)
+
+	def getNodePtr(self):
+		return core.cauchy_node()
+
+class ChisqrNode(StochasticNode):
+	def __init__(self,k):
+		StochasticNode.__init__(self,[k])
+		self.k=k
+
+	def getNodePtr(self):
+		return core.chisqr_node(self.k)
+
+class LogNormalNode(StochasticNode):
+	def __init__(self,m,s):
+		import math
+		StochasticNode.__init__(self,[math.exp(NodeOutput(m).getValue())],m,s)
+
+	def getNodePtr(self):
+		return core.log_normal_node()
+	
 class NormalNode(StochasticNode):
 	def __init__(self,m,s):
 		StochasticNode.__init__(self,[NodeOutput(m).getValue()],m,s)
@@ -73,6 +96,24 @@ class CosNode(DeterministicNode):
 	def getValue(self,i):
 		import math
 		return math.cos(self.parents[0].getValue())
+
+class DExpNode(StochasticNode):
+	def __init__(self,mu,tau):
+		StochasticNode.__init__(self,[NodeOutput(mu).getValue],mu,tau)
+
+	def getNodePtr(self):
+		return core.dexp_node()
+
+class ExpNode(DeterministicNode):
+	def __init__(self,p):
+		DeterministicNode.__init__(self,1,p)
+
+	def getNodePtr(self):
+		return core.exp_node()
+
+	def getValue(self,i):
+		import math
+		return math.exp(self.parents[0].getValue())
 
 class SinNode(DeterministicNode):
 	def __init__(self,p):
@@ -129,6 +170,12 @@ class SqrtNode(DeterministicNode):
 		import math
 		return math.sqrt(self.parents[0].getValue())
 
+class FNode(StochasticNode):
+	def __init__(self,n,m):
+		StochasticNode.__init__(self,[NodeOutput(m).getValue()],n,m)
+
+	def getNodePtr(self):
+		return core.f_node()
 	
 class GammaNode(StochasticNode):
 	def __init__(self,r,lbd):
@@ -136,6 +183,13 @@ class GammaNode(StochasticNode):
 
 	def getNodePtr(self):
 		return core.gamma_node()
+
+class GenGammaNode(StochasticNode):
+	def __init__(self,r,lbd,b):
+		StochasticNode.__init__(self,[NodeOutput(r).getValue()/NodeOutput(lbd).getValue()],r,lbd,b)
+
+	def getNodePtr(self):
+		return core.gen_gamma_node()
 
 class ILogitNode(DeterministicNode):
 	def __init__(self,x):
@@ -164,6 +218,12 @@ class LogitNode(DeterministicNode):
 
 		return logit(self.parents[0].getValue())
 
+class LogisticNode(StochasticNode):
+	def __init__(self,m,s):
+		StochasticNode.__init__(self,[NodeOutput(m).getValue()],m,s)
+
+	def getNodePtr(self):
+		return core.logistic_node()
 			
 class ParetoNode(StochasticNode):
 	def __init__(self,c,a):
@@ -265,3 +325,22 @@ class CondNode(DeterministicNode):
 			return self.parents[1].getValue()
 			
 		
+class StrNode(DeterministicNode):
+	def __init__(self,expr,*args):
+		parents=tuple(i[1] for i in args)
+		DeterministicNode.__init__(self,1,*parents)
+		self.expr=expr
+		self.arg_names=core.str_vec(len(args))
+		for i in range(len(args)):
+			self.arg_names[i]=args[i][0]
+
+		
+	def getNodePtr(self):
+		return core.str_node_(self.expr,self.arg_names)
+
+	def getValue(self,i):
+		params=core.vector(len(self.arg_names))
+		for i in range(len(self.arg_names)):
+			params[i]=self.parents[i].getValue()
+			
+		return core.eval_expr(self.expr,self.arg_names,params)
