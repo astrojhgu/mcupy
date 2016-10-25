@@ -16,7 +16,7 @@ def Tag(*t):
 class Graph:
 	def __init__(self):
 		self.graph=core.cppgraph()
-		self.nodes=[]
+		self.nodes=set()
 		pass
 
 	def __getstate__(self):
@@ -27,11 +27,12 @@ class Graph:
 	def __setstate__(self,state):
 		self.__dict__.update(state)
 		self.graph=core.cppgraph()
-		for n in self.nodes:
+		nodes1=self.nodes.copy()
+		self.nodes=set()
+		for n in nodes1:
 			n.addToGraph(self)
 
 	def addNode(self,node):
-		self.nodes.append(node)
 		node.addToGraph(self)
 
 	def sample(self):
@@ -47,7 +48,15 @@ class Graph:
 				return self.graph.get_monitor(n.getTag(),int(idx[0]))
 		else:
 			raise RuntimeException("must supply node or nodeoutput")
-		
+
+	def dumpTopology(self):
+		result=set()		
+		for i in self.nodes:
+			if i.named:
+				for j in i.enumerateNamedParents():
+					result.add((i.tagName,j.tagName))
+		return result
+
 		
 class Node(metaclass=ABCMeta):
 	defaultTagName="__node__"
@@ -60,8 +69,34 @@ class Node(metaclass=ABCMeta):
 		self.parents=[NodeOutput(i) for i in parents]
 		self.tagName=Node.defaultTagName
 		self.tagIndex=Node.nodeCount
+		self.named=False
 		self.nOutputs=int(nOutputs)
 		Node.nodeCount+=1
+
+	def withTag(self,tagName,*tagIndex):
+		self.tagName=tagName
+		if tagIndex:
+			self.tagIndex=tagIndex
+		self.named=True
+		return self
+
+	def inGroup(self,tagName):
+		self.tagName=tagName
+		self.named=True
+		return self
+
+	def enumerateNamedParents(self):
+		result=set()
+		#print("begin enumerate:",self)
+		for i in self.parents:
+			if i.node.named:
+		#		print("find:",i.node.tagName)
+				result.add(i.node)
+			else:
+		#		print("unnamed:",i.node)
+				result.update(i.node.enumerateNamedParents())
+		#print("end enumerate:",self)
+		return result
 
 	def __getstate__(self):
 		state=self.__dict__.copy()
@@ -97,6 +132,7 @@ class Node(metaclass=ABCMeta):
 	def addSelfToGraph(self,g):
 		if self.graph is not g:
 			na=g.graph.add_node(self.getNodePtr(),self.getTag())
+			g.nodes.add(self)
 			for p in self.parents:
 				na.with_parent(p.node.getTag(),p.index)
 

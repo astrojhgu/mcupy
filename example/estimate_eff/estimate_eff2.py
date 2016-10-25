@@ -1,29 +1,36 @@
 #!/usr/bin/env python
 
+import pydot
 import sys
 from mcupy.graph import *
 from mcupy.nodes import *
 
 g=Graph()
-A=UniformNode(0.001,1-1e-5)
-B=UniformNode(0.001,1-1e-5)
-mu=UniformNode(.001,100-1e-5)
-sigma=UniformNode(.001,100-1e-5)
+A=UniformNode(0.001,1-1e-5).withTag("A")
+B=UniformNode(0.001,1-1e-5).withTag("B")
+mu=UniformNode(.001,100-1e-5).withTag("mu")
+sigma=UniformNode(.001,100-1e-5).withTag("sigma")
 n=0
 for l in open('eff.txt'):
 	e1,nrec1,ninj1=l.split()
 	e1=float(e1)
 	nrec1=float(nrec1)
 	ninj1=float(ninj1)
-	E=C_(e1)
-	ninj=C_(ninj1)
+	E=C_(e1).inGroup("E")
+	ninj=C_(ninj1).inGroup("ninj")
 	#eff=(B-A)*PhiNode((E-mu)/sigma)+A
-	eff=StrNode("(B-A)*phi((E-mu)/sigma)+A",("A",A),("B",B),("mu",mu),("sigma",sigma),("E",E))
-	nrec=BinNode(eff,ninj).withObservedValue(nrec1)
+	eff=StrNode("(B-A)*phi((E-mu)/sigma)+A",("A",A),("B",B),("mu",mu),("sigma",sigma),("E",E)).inGroup("eff")
+	nrec=BinNode(eff,ninj).withObservedValue(nrec1).inGroup("nrec")
 	g.addNode(nrec)
         
 ma=g.getMonitor(A)
 mb=g.getMonitor(B)
+
+dot=pydot.Dot()
+for i in g.dumpTopology():
+	dot.add_edge(pydot.Edge(pydot.Node(i[1]),pydot.Node(i[0])))
+
+dot.write("a.dot")
 
 for i in range(0,30000):
 	g.sample()
