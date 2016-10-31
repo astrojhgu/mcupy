@@ -46,3 +46,15 @@ def log_progress(sequence, every=None, size=None):
 		progress.bar_style = 'success'
 		progress.value = index
 		label.value = str(index or '?')
+
+
+def display_graph(g):
+	from IPython.display import Image, display
+	import pydot
+	t=g.dumpTopology()
+	dot=pydot.Dot()
+	for i in t:
+		dot.add_edge(pydot.Edge(pydot.Node(i[1]),pydot.Node(i[0])))
+	plt = Image(dot.create_png())
+	display(plt)
+	

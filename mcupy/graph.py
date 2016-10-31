@@ -62,7 +62,7 @@ class Node(metaclass=ABCMeta):
 	defaultTagName="__node__"
 	nodeCount=0
 	
-	def __init__(self,nOutputs,*parents):
+	def __init__(self,*parents):
 		self.graph=None
 		if not all([isinstance(i,Node) or isinstance(i,NodeOutput) for i in parents]):
 			raise RuntimeError("all parents must be either Node or NodeOutput")
@@ -70,7 +70,6 @@ class Node(metaclass=ABCMeta):
 		self.tagName=Node.defaultTagName
 		self.tagIndex=Node.nodeCount
 		self.named=False
-		self.nOutputs=int(nOutputs)
 		Node.nodeCount+=1
 
 	def withTag(self,tagName,*tagIndex):
@@ -107,10 +106,6 @@ class Node(metaclass=ABCMeta):
 	def getNodePtr(self):
 		pass
 
-	@abstractmethod
-	def getValue(self,i):
-		pass
-
 	def getTag(self):
 		return core.tag_t(self.tagName,self.tagIndex)
 	
@@ -138,10 +133,13 @@ class Node(metaclass=ABCMeta):
 
 			if isinstance(self,StochasticNode):
 				for i in range(0,len(self.value)):
+					if self.getValue(i) is None:
+						continue
 					if self.isObserved(i):
 						na.with_observed_value(i,self.getValue(i))
 					else:
-						na.with_value(i,self.getValue(i))
+						na.with_value(i,self.getValue(i));
+					
 			self.graph=g
 			na.done()
 
@@ -171,14 +169,10 @@ class Node(metaclass=ABCMeta):
 		return GeNode(self,that)
 
 class StochasticNode(Node,metaclass=ABCMeta):
-	def __init__(self,value,*parents):
-		if hasattr(value,"__len__"):
-			Node.__init__(self,len(value),*parents)
-			self.value=value
-		else:
-			Node.__init__(self,1,*parents)
-			self.value=[value]
-		self.observed=[False for i in self.value]
+	def __init__(self,*parents):
+		Node.__init__(self,*parents)
+		self.value=[]
+		self.observed=[]
 
 	def getValue(self,i):
 		if self.graph==None:
@@ -188,6 +182,8 @@ class StochasticNode(Node,metaclass=ABCMeta):
 			
 	def setValue(self,i,v):
 		if self.graph==None:
+			while len(self.value)-1<i:
+				self.value+=[None]
 			self.value[i]=v
 		else:
 			self.graph.graph.set_value(self.getTag(),i,v)
@@ -200,6 +196,8 @@ class StochasticNode(Node,metaclass=ABCMeta):
 
 	def setObserved(self,i,o):
 		if self.graph==None:
+			while len(self.observed)-1<i:
+				self.observed+=[False]
 			self.observed[i]=o
 		else:
 			return self.graph.graph.set_observed(self.getTag(),i,o)
@@ -216,11 +214,12 @@ class StochasticNode(Node,metaclass=ABCMeta):
 		for i in range(0,len(value)):
 			if value[i] is not None:
 				self.setValue(i,value[i])
+				self.setObserved(i,False);
 		return self
 
 class DeterministicNode(Node,metaclass=ABCMeta):
-	def __init__(self,nOutputs,*parents):
-		Node.__init__(self,nOutputs,*parents)
+	def __init__(self,*parents):
+		Node.__init__(self,*parents)
 		
 	
 class NodeOutput:
@@ -238,10 +237,6 @@ class NodeOutput:
 			self.index=node.index
 		else:
 			raise RuntimeError("first parameter must be a Node")
-
-
-	def getValue(self):
-		return self.node.getValue(self.index)
 
 
 	def __add__(self,that):
@@ -271,10 +266,7 @@ class NodeOutput:
 
 class AddNode(DeterministicNode):
 	def __init__(self,p1,p2):
-		DeterministicNode.__init__(self,1,p1,p2)
-
-	def getValue(self,i):
-		return self.parents[0].getValue()+self.parents[1].getValue()
+		DeterministicNode.__init__(self,p1,p2)
 
 	def getNodePtr(self):
 		return core.add_node()
@@ -282,20 +274,14 @@ class AddNode(DeterministicNode):
 
 class SubNode(DeterministicNode):
 	def __init__(self,p1,p2):
-		DeterministicNode.__init__(self,1,p1,p2)
-
-	def getValue(self,i):
-		return self.parents[0].getValue()-self.parents[1].getValue()
+		DeterministicNode.__init__(self,p1,p2)
 
 	def getNodePtr(self):
 		return core.sub_node()
 
 class MulNode(DeterministicNode):
 	def __init__(self,p1,p2):
-		DeterministicNode.__init__(self,1,p1,p2)
-
-	def getValue(self,i):
-		return self.parents[0].getValue()*self.parents[1].getValue()
+		DeterministicNode.__init__(self,p1,p2)
 
 	def getNodePtr(self):
 		return core.mul_node()
@@ -303,10 +289,7 @@ class MulNode(DeterministicNode):
 
 class DivNode(DeterministicNode):
 	def __init__(self,p1,p2):
-		DeterministicNode.__init__(self,1,p1,p2)
-
-	def getValue(self,i):
-		return self.parents[0].getValue()/self.parents[1].getValue()
+		DeterministicNode.__init__(self,p1,p2)
 
 	def getNodePtr(self):
 		return core.div_node()
@@ -314,40 +297,39 @@ class DivNode(DeterministicNode):
 
 class LtNode(DeterministicNode):
 	def __init__(self,p1,p2):
-		StochasticNode.__init__(self,1,p1,p2)
-
-	def getValue(self,i):
-		return float(self.parents[0].value()<parents[1].value())
+		StochasticNode.__init__(self,p1,p2)
 
 	def getNodePtr(self):
 		return core.lt_node()
 
 class GtNode(DeterministicNode):
 	def __init__(self,p1,p2):
-		StochasticNode.__init__(self,1,p1,p2)
-
-	def getValue(self,i):
-		return float(self.parents[0].value()>parents[1].value())
+		StochasticNode.__init__(self,p1,p2)
 
 	def getNodePtr(self):
 		return core.gt_node()
 
 class LeNode(DeterministicNode):
 	def __init__(self,p1,p2):
-		StochasticNode.__init__(self,1,p1,p2)
-
-	def getValue(self,i):
-		return float(self.parents[0].value()<=parents[1].value())
+		StochasticNode.__init__(self,p1,p2)
 
 	def getNodePtr(self):
 		return core.le_node()
 
 class GeNode(DeterministicNode):
 	def __init__(self,p1,p2):
-		StochasticNode.__init__(self,1,p1,p2)
-
-	def getValue(self,i):
-		return float(self.parents[0].value()>=parents[1].value())
+		StochasticNode.__init__(self,p1,p2)
 
 	def getNodePtr(self):
 		return core.ge_node()
+
+class MixtureNode(StochasticNode):
+	def __init__(self,components,*parents):
+		StochasticNode.__init__(self,*parents)
+		self.components=components
+
+	def getNodePtr(self):
+		snv=core.stochastic_node_vec()
+		for i in self.components:
+			snv.append(core.convert_to_stochastic(i.getNodePtr()))
+		return core.mixture_node(snv)

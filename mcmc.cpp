@@ -22,9 +22,11 @@
 #include <core/wrappered_graph.hpp>
 #include <core/urand.hpp>
 
+#include <core/mixture_node.hpp>
 #include <tools/dump_graph_topology.hpp>
 
 #include<nodes/abs_node.hpp>
+#include<nodes/bern_node.hpp>
 #include<nodes/beta_node.hpp>
 #include<nodes/bin_node.hpp>
 #include<nodes/bvnormal_node.hpp>
@@ -208,6 +210,17 @@ bool test_node_kind(const std::shared_ptr<node<double,std_vector> >& p)
   return bool(dynamic_pointer_cast<T>(p));
 }
 
+template <typename T>
+std::shared_ptr<T> cast_to(const std::shared_ptr<node<double,std_vector> >& p)
+{
+  auto result=dynamic_pointer_cast<T>(p);
+  if (!bool(result))
+    {
+      throw std::runtime_error("cannot be convert to subclass");
+    }
+  return result;
+}
+
 int num_of_parents(const std::shared_ptr<node<double,std_vector> >& p)
 {
   return p->num_of_parents();
@@ -254,7 +267,7 @@ BOOST_PYTHON_MODULE(core)
 {
   
   def("arms",&pyarms);
-  class_<std::shared_ptr<node<double,std_vector> > >("node_ptr");
+  
   class_<std::weak_ptr<node<double,std_vector> > >("weak_node_ptr");
   
   class_<std::vector<double> >("vector",boost::python::init<size_t>())
@@ -268,9 +281,20 @@ BOOST_PYTHON_MODULE(core)
   class_<std::vector<std::pair<mcmc_utilities::tag_t,size_t> > >("tag_vec")
 	 .def(vector_indexing_suite<std::vector<std::pair<mcmc_utilities::tag_t,size_t> > >());
 
+  class_<std::vector<std::shared_ptr<mcmc_utilities::node<double,std_vector> > > >("node_vec")
+    .def(vector_indexing_suite<std::vector<std::shared_ptr<mcmc_utilities::node<double,std_vector> > > >())
+    .def("append",(void (std::vector<std::shared_ptr<mcmc_utilities::node<double,std_vector> > >::*)(const std::shared_ptr<mcmc_utilities::node<double,std_vector> > &))&std::vector<std::shared_ptr<mcmc_utilities::node<double,std_vector> > >::push_back);
+
+  class_<std::vector<std::shared_ptr<mcmc_utilities::stochastic_node<double,std_vector> > > >("stochastic_node_vec")
+    .def(vector_indexing_suite<std::vector<std::shared_ptr<mcmc_utilities::stochastic_node<double,std_vector> > > >())
+    .def("append",(void (std::vector<std::shared_ptr<mcmc_utilities::stochastic_node<double,std_vector> > >::*)(const std::shared_ptr<mcmc_utilities::stochastic_node<double,std_vector> > &))&std::vector<std::shared_ptr<mcmc_utilities::stochastic_node<double,std_vector> > >::push_back);
+
   class_<std::pair<mcmc_utilities::tag_t,size_t> >("tag_pair",
 						   boost::python::init<mcmc_utilities::tag_t,size_t>());
 
+
+  class_<std::shared_ptr<mcmc_utilities::node<double,std_vector> > >("node_ptr",boost::python::init<>());
+  class_<std::shared_ptr<mcmc_utilities::stochastic_node<double,std_vector> > >("stochastic_node_ptr",boost::python::init<>());
   //def("pair",&std::make_pair<mcmc_utilities::tag_t,size_t>);
   
   class_<node_wrap, noncopyable>("node",boost::python::init<size_t,size_t>())
@@ -368,6 +392,7 @@ BOOST_PYTHON_MODULE(core)
   def("eval_expr",&eval_expr);
   
   def("abs_node",&create_node<abs_node<double,std_vector> >,return_value_policy<return_by_value>());
+  def("bern_node",&create_node<bern_node<double,std_vector> >,return_value_policy<return_by_value>());
   def("beta_node",&create_node<beta_node<double,std_vector>,double,double>,return_value_policy<return_by_value>());
   def("bin_node",&create_node<bin_node<double,std_vector> >,return_value_policy<return_by_value>());
   def("bvnormal_node",&create_node<bvnormal_node<double,std_vector> >,return_value_policy<return_by_value>());
@@ -415,6 +440,8 @@ BOOST_PYTHON_MODULE(core)
   def("switch_node",&create_node<switch_node<double,std_vector>,int >,return_value_policy<return_by_value>());
 
   def("cond_node",&create_node<cond_node<double,std_vector> >,return_value_policy<return_by_value>());
+
+  def("mixture_node",&create_node<mixture_node<double,std_vector>,const std::vector<std::shared_ptr<stochastic_node<double,std_vector> > >& >,return_value_policy<return_by_value>());
   
   def("is_deterministic_node",&test_node_kind<deterministic_node<double,std_vector> >);
   def("is_stochastic_node",&test_node_kind<stochastic_node<double,std_vector> >);
@@ -423,5 +450,7 @@ BOOST_PYTHON_MODULE(core)
   def("set_value",&set_value);
   def("set_observed",&set_observed);
   def("get_order",&get_order);
+
+  def("convert_to_stochastic",&cast_to<stochastic_node<double,std_vector> >);
 
 }
