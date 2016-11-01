@@ -324,9 +324,13 @@ class GeNode(DeterministicNode):
 		return core.ge_node()
 
 class MixtureNode(StochasticNode):
-	def __init__(self,components,*parents):
+	def __init__(self,*parents):
 		StochasticNode.__init__(self,*parents)
+		
+
+	def withComponents(self,*components):
 		self.components=components
+		return self
 
 	def getNodePtr(self):
 		snv=core.stochastic_node_vec()

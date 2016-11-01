@@ -50,11 +50,11 @@ def log_progress(sequence, every=None, size=None):
 
 def display_graph(g):
 	from IPython.display import Image, display
-	import pydot
+	import pydot_ng
 	t=g.dumpTopology()
-	dot=pydot.Dot()
+	dot=pydot_ng.Dot()
 	for i in t:
-		dot.add_edge(pydot.Edge(pydot.Node(i[1]),pydot.Node(i[0])))
+		dot.add_edge(pydot_ng.Edge(pydot_ng.Node(i[1]),pydot_ng.Node(i[0])))
 	plt = Image(dot.create_png())
 	display(plt)
 	
