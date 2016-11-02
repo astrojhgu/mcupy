@@ -1,9 +1,12 @@
 #!/usr/bin/env python
 
-import pydot
 import sys
 from mcupy.graph import *
 from mcupy.nodes import *
+try:
+	import pydot
+except(ImportError):
+	import pydot_ng as pydot
 
 g=Graph()
 A=UniformNode(0.001,1-1e-5).withTag("A")
