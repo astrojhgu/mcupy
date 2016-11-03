@@ -13,7 +13,6 @@ A=UniformNode(0.001,1-1e-5).withTag("A")
 B=UniformNode(0.001,1-1e-5).withTag("B")
 mu=UniformNode(.001,100-1e-5).withTag("mu")
 sigma=UniformNode(.001,100-1e-5).withTag("sigma")
-n=0
 for l in open('eff.txt'):
 	e1,nrec1,ninj1=l.split()
 	e1=float(e1)
