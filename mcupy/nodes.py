@@ -224,14 +224,21 @@ class StepNode(DeterministicNode):
 	def getNodePtr(self):
 		return core.step_node()
 
-class UniformNode(StochasticNode):
+class FixedUniformNode(StochasticNode):
 	def __init__(self,a,b):
 		StochasticNode.__init__(self)
 		self.a=a
 		self.b=b
 
 	def getNodePtr(self):
-		return core.uniform_node(self.a,self.b)
+		return core.fixed_uniform_node(self.a,self.b)
+
+class UniformNode(StochasticNode):
+	def __init__(self,*p):
+		StochasticNode.__init__(self,*p)
+
+	def getNodePtr(self):
+		return core.uniform_node()
 
 class TNode(StochasticNode):
 	def __init__(self,*p):

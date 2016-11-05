@@ -21,9 +21,9 @@ ilogitlgfclus0=ILogitNode(lgfclus0)
 g.addNode(ilogitlgfclus0)
 
 for i in range(0,dataLength):
-	nbkg=UniformNode(1,1e7)
+	nbkg=FixedUniformNode(1,1e7)
 	fbkg=BetaNode(1,1)
-	nclus=UniformNode(1,1e7)
+	nclus=FixedUniformNode(1,1e7)
 
 	obsnbkg=PoissonNode(nbkg).withObservedValue(data["obsnbkg"][i])
 	g.addNode(obsnbkg)

@@ -422,7 +422,8 @@ BOOST_PYTHON_MODULE(core)
   def("tan_node",&create_node<tan_node<double,std_vector> >,return_value_policy<return_by_value>());
   def("t_node",&create_node<t_node<double,std_vector> >,return_value_policy<return_by_value>());
   def("trunc_pareto_node",&create_node<trunc_pareto_node<double,std_vector>,double>,return_value_policy<return_by_value>());
-  def("uniform_node",&create_node<uniform_node<double,std_vector>,double,double>,return_value_policy<return_by_value>());
+  def("fixed_uniform_node",&create_node<fixed_uniform_node<double,std_vector>,double,double>,return_value_policy<return_by_value>());
+  def("uniform_node",&create_node<uniform_node<double,std_vector> >,return_value_policy<return_by_value>());
   def("discrete_uniform_node",&create_node<discrete_uniform_node<double,std_vector>,int,int>,return_value_policy<return_by_value>());
   def("str_node_",&create_node<str_node<double,std_vector>,const std::string&,const std::vector<std::string>&>,return_value_policy<return_by_value>());
 

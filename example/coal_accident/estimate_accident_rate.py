@@ -5,8 +5,8 @@ from mcupy.nodes import *
 
 g=Graph()
 
-l1=UniformNode(1e-6,100)
-l2=UniformNode(1e-6,100)
+l1=FixedUniformNode(1e-6,100)
+l2=FixedUniformNode(1e-6,100)
 y=DiscreteUniformNode(0,113)
 
 for line in open('coal.dat'):
