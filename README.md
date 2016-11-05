@@ -18,7 +18,7 @@ After above libs are installed, just execute go into pymcutil and run
 ./setup.sh install # as root if needed
 ```
 ##Example
-Check ![example/estimate_eff/estimate_eff.py](example/estimate_eff/estimate_eff1.py).<br/>
+Check ![example/estimate_eff/estimate_eff1.py](example/estimate_eff/estimate_eff1.py).<br/>
 This is an example given in thie book ![BAYESIAN METHODS FOR THE PHYSICAL SCIENCES](http://www.brera.mi.astro.it/~andreon/BayesianMethodsForThePhysicalSciences/) section 8.2.
 
 First let's import necessary packages
