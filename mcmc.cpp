@@ -17,7 +17,7 @@
 #include <core/node.hpp>
 #include <core/stochastic_node.hpp>
 #include <core/deterministic_node.hpp>
-#include <core/tp_aware_dtm_node.hpp>
+#include <core/differentiable_dtm_node.hpp>
 #include <core/tag_t.hpp>
 #include <core/wrappered_graph.hpp>
 #include <core/urand.hpp>
@@ -167,24 +167,19 @@ public:
   {}
 };
 
-class tp_aware_dtm_node_wrap
-  :public tp_aware_dtm_node<double,std_vector>,
-   public wrapper<tp_aware_dtm_node<double,std_vector> >
+class differentiable_dtm_node_wrap
+  :public differentiable_dtm_node<double,std_vector>,
+   public wrapper<differentiable_dtm_node<double,std_vector> >
 {
 public:
-  order do_get_order(const node<double,std_vector>* pn,int n)const override
-  {
-    return this->get_override("do_get_order")(pn,n);
-  }
-
   double do_calc(size_t idx,const std::vector<double>& parents)const
   {
     return this->get_override("do_calc")(idx,parents);
   }
 
 public:
-  tp_aware_dtm_node_wrap(size_t nparents,size_t ndim)
-    :tp_aware_dtm_node<double,std_vector>(nparents,ndim)
+  differentiable_dtm_node_wrap(size_t nparents,size_t ndim)
+    :differentiable_dtm_node<double,std_vector>(nparents,ndim)
   {
   }
 };
@@ -194,13 +189,6 @@ template <typename Tnode,typename ...Args>
 std::shared_ptr<node<double,std_vector> > create_node(Args ...args)
 {
   return std::shared_ptr<node<double,std_vector> >(new Tnode(args...));
-}
-
-order get_order(const std::weak_ptr<node<double,std_vector> >& n1,
-		const std::weak_ptr<node<double,std_vector> >& n2,int n)
-{
-  auto& p=dynamic_cast<const tp_aware_dtm_node<double,std_vector>&>(*(std::shared_ptr<node<double,std_vector> >(n1).get()));
-  return p.get_order(std::shared_ptr<node<double,std_vector> >(n2).get(),n);
 }
 
 
@@ -318,9 +306,8 @@ BOOST_PYTHON_MODULE(core)
     .def("do_calc",pure_virtual(&deterministic_node<double,std_vector>::do_calc))
     ;
 
-  class_<tp_aware_dtm_node_wrap,bases<deterministic_node<double,std_vector> > ,noncopyable>("tp_aware_dtm_node",
+  class_<differentiable_dtm_node_wrap,bases<deterministic_node<double,std_vector> > ,noncopyable>("differentiable_dtm_node",
 											    boost::python::init<size_t,size_t>())
-    .def("do_get_order",pure_virtual(&tp_aware_dtm_node<double,std_vector>::do_get_order))
     ;
 
   
@@ -333,12 +320,6 @@ BOOST_PYTHON_MODULE(core)
     .def(str(self))
     ;
 
-  class_<mcmc_utilities::order>("order",boost::python::init<int,bool,bool>())
-    .def("n",&mcmc_utilities::order::get_n)
-    .def("is_homo",&mcmc_utilities::order::is_homo)
-    .def("is_poly",&mcmc_utilities::order::is_poly)
-    .def(str(self))
-    ;
   
   class_<monitor_type<double> >("monitor_type",boost::python::init<const std::function<double()> >())
     .def("get",&monitor_type<double>::get)
@@ -450,7 +431,6 @@ BOOST_PYTHON_MODULE(core)
   def("ndims",&num_of_dims);
   def("set_value",&set_value);
   def("set_observed",&set_observed);
-  def("get_order",&get_order);
 
   def("convert_to_stochastic",&cast_to<stochastic_node<double,std_vector> >);
 
