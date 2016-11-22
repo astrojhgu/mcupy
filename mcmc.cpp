@@ -8,12 +8,82 @@
 #include <boost/python/pure_virtual.hpp>
 #include <boost/python/copy_const_reference.hpp>
 #include <boost/python/call.hpp>
+#include <boost/python/call_method.hpp>
+#include <boost/python/manage_new_object.hpp>
+#include <boost/python/return_opaque_pointer.hpp>
 #include <boost/operators.hpp>
 #include <boost/python/overloads.hpp>
 #include <vector>
+#include <mutex>
 #include <fstream>
 
+
+using namespace boost::python;
+using namespace boost;
+
+namespace mcmc_utilities
+{
+}
+
+#include <core/mcmc_traits.hpp>
+
 #define private public
+
+namespace mcmc_utilities
+{
+  object clone(object o)
+  {
+    object result=call_method<object>(o.ptr(),"copy");
+    return result;
+  }
+  
+  template <>
+  class element_type_trait<object>
+  {
+public:
+    using element_type=object;
+  };
+
+  template <>
+  class element_type_trait<const object>
+  {
+public:
+    using element_type=object;
+  };
+
+  
+  template <typename T>
+  T as(const object& rhs)
+  {
+    T result=extract<T>(rhs);
+    return result;
+  }
+
+  size_t get_size(const object& x)
+  {
+    size_t result=call_method<size_t>(x.ptr(),"__len__");
+    return result;
+  }
+
+  object get_element(const object& x,size_t i)
+  {
+    object result=call_method<object>(x.ptr(),"__getitem__",i);
+    return result;
+  }
+
+  object get_element(object& x,size_t i)
+  {
+    object result=call_method<object>(x.ptr(),"__getitem__",i);
+    return result;
+  }
+
+  void set_element(object& x,size_t i,object& v)
+  {
+    call_method<void>(x.ptr(),"__setitem__",i,v);
+  }
+}
+
+#include <rng/prng.hpp>
 #include <core/node.hpp>
 #include <core/stochastic_node.hpp>
 #include <core/deterministic_node.hpp>
@@ -21,7 +91,6 @@
 #include <core/tag_t.hpp>
 #include <core/wrappered_graph.hpp>
 #include <core/urand.hpp>
-
 #include <core/mixture_node.hpp>
 #include <tools/dump_graph_topology.hpp>
 
@@ -64,9 +133,9 @@
 #include<nodes/compare_node.hpp>
 #include<nodes/switch_node.hpp>
 
-using namespace boost::python;
-using namespace boost;
 using namespace mcmc_utilities;
+
+
 
 class node_wrap
   :public node<double,std_vector>,
@@ -103,6 +172,7 @@ public:
   {}
 };
 
+#include <core/ensemble_sample.hpp>
 
 class stochastic_node_wrap
   :public stochastic_node<double,std_vector>,
@@ -240,9 +310,24 @@ void set_observed(std::shared_ptr<node<double,std_vector> >& p,int idx,bool o)
 double pyarms(PyObject* func,double x1,double x2,double xcur)
 {
   static urand<double> rnd;
-  auto pd=[func](double x)->double {return boost::python::call<double> (func,x);};
+  auto pd=[func](double x)->double {return call<double> (func,x);};
   size_t xmc=0;
   return arms(pd,std::pair<double,double>(x1,x2),xcur,10,rnd,xmc);
+}
+
+namespace mcmc_utilities
+{  
+  object ensemble_sample1(const object& func,const object& ensemble)
+  {
+    //static mcmc_utilities::prng<double> prng;
+    static mcmc_utilities::urand<double> rng;
+    return ensemble_sample([&func](const object& x)
+			   {
+			     double y=(double)call<double>(func.ptr(),x);
+			     return y;
+			   },
+			   ensemble,rng,1);
+  }
 }
 
 double eval_expr(const std::string& expr,const std::vector<std::string>& args,const std::vector<double>& params)
@@ -433,5 +518,9 @@ BOOST_PYTHON_MODULE(core)
   def("set_observed",&set_observed);
 
   def("convert_to_stochastic",&cast_to<stochastic_node<double,std_vector> >);
-
+  //def("clone",(object (*)(object))&clone);
+  //def("get_size",(size_t (*)(const object&))&get_size);
+  //def("get_element",(object (*)(const object&,size_t))&get_element);
+  //def("set_element",(void (*)(object&,size_t,object&))&set_element);
+  def("ensemble_sample",ensemble_sample1);
 }

@@ -1,3 +1,4 @@
+from __future__ import division
 from . import core
 import sys
 from abc import ABCMeta, abstractmethod
@@ -58,7 +59,8 @@ class Graph:
 		return result
 
 		
-class Node(metaclass=ABCMeta):
+class Node:
+	__metaclass__=ABCMeta
 	defaultTagName="__node__"
 	nodeCount=0
 	
@@ -156,6 +158,9 @@ class Node(metaclass=ABCMeta):
 	def __truediv__(self,that):
 		return DivNode(self,that)
 
+	def __div__(self,that):
+		return DivNode(self,that)
+
 	def __lt__(self,that):
 		return LtNode(self,that)
 
@@ -168,7 +173,9 @@ class Node(metaclass=ABCMeta):
 	def __ge__(self,that):
 		return GeNode(self,that)
 
-class StochasticNode(Node,metaclass=ABCMeta):
+class StochasticNode(Node):
+	__metaclass__=ABCMeta
+	
 	def __init__(self,*parents):
 		Node.__init__(self,*parents)
 		self.value=[]
@@ -217,7 +224,9 @@ class StochasticNode(Node,metaclass=ABCMeta):
 				self.setObserved(i,False);
 		return self
 
-class DeterministicNode(Node,metaclass=ABCMeta):
+class DeterministicNode(Node):
+	__metaclass__=ABCMeta
+	
 	def __init__(self,*parents):
 		Node.__init__(self,*parents)
 		
@@ -249,6 +258,9 @@ class NodeOutput:
 		return MulNode(self,that)
 
 	def __truediv__(self,that):
+		return DivNode(self,that)
+
+	def __div__(self,that):
 		return DivNode(self,that)
 
 	def __lt__(self,that):

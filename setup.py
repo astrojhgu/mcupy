@@ -2,7 +2,9 @@
 
 import sys
 from distutils.core import setup, Extension
-
+import os
+os.environ["CC"] = "clang"
+os.environ["CXX"] = "clang++"
 
 if sys.version_info[0]==3:
     boost_python_lib='boost_python3'
