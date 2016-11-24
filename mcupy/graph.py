@@ -39,6 +39,9 @@ class Graph:
 	def sample(self):
 		self.graph.sample()
 
+	def ensemble_sample(self,ensemble):
+		core.graph_ensemble_sample(self.graph,ensemble)
+
 	def getMonitor(self,n,*idx):
 		if isinstance(n,NodeOutput):
 			return self.graph.get_monitor(n.node.getTag(),n.index)

@@ -173,7 +173,7 @@ public:
 };
 
 #include <core/ensemble_sample.hpp>
-
+#include <core/graph_ensemble_sample.hpp>
 class stochastic_node_wrap
   :public stochastic_node<double,std_vector>,
    public wrapper<stochastic_node<double,std_vector> >
@@ -327,7 +327,16 @@ namespace mcmc_utilities
 			     return y;
 			   },
 			   ensemble,rng,1);
+
   }
+
+  void ensemble_sample2(wrappered_graph<double,mcmc_utilities::tag_t>& g,
+			std::vector<std::vector<double> >& ensemble)
+  {
+    static mcmc_utilities::urand<double> rng;
+    ensemble=ensemble_sample(dynamic_cast<graph<double,mcmc_utilities::tag_t,std_vector>&>(g),ensemble,rng);
+  }
+  
 }
 
 double eval_expr(const std::string& expr,const std::vector<std::string>& args,const std::vector<double>& params)
@@ -361,6 +370,10 @@ BOOST_PYTHON_MODULE(core)
   class_<std::vector<std::shared_ptr<mcmc_utilities::stochastic_node<double,std_vector> > > >("stochastic_node_vec")
     .def(vector_indexing_suite<std::vector<std::shared_ptr<mcmc_utilities::stochastic_node<double,std_vector> > > >())
     .def("append",(void (std::vector<std::shared_ptr<mcmc_utilities::stochastic_node<double,std_vector> > >::*)(const std::shared_ptr<mcmc_utilities::stochastic_node<double,std_vector> > &))&std::vector<std::shared_ptr<mcmc_utilities::stochastic_node<double,std_vector> > >::push_back);
+
+  class_<std::vector<std::vector<double> > >("ensemble_type")
+    .def(vector_indexing_suite<std::vector<std::vector<double> > >())
+    .def("append",(void (std::vector<std::vector<double> >::*)(const std::vector<double>&))&std::vector<std::vector<double> >::push_back);
 
   class_<std::pair<mcmc_utilities::tag_t,size_t> >("tag_pair",
 						   boost::python::init<mcmc_utilities::tag_t,size_t>());
@@ -523,4 +536,5 @@ BOOST_PYTHON_MODULE(core)
   //def("get_element",(object (*)(const object&,size_t))&get_element);
   //def("set_element",(void (*)(object&,size_t,object&))&set_element);
   def("ensemble_sample",ensemble_sample1);
+  def("graph_ensemble_sample",ensemble_sample2);
 }
